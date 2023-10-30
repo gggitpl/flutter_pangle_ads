@@ -80,7 +80,7 @@ public class PluginDelegate implements MethodChannel.MethodCallHandler, EventCha
         String method = call.method;
         Log.d(TAG, "MethodChannel onMethodCall method:" + method + " arguments:" + call.arguments);
         if ("requestPermissionIfNecessary".equals(method)) {
-            requestPermissionIfNecessary(call, result);
+            requestPermissionIfNecessary(result);
         } else if ("initAd".equals(method)) {
             initAd(call, result);
         } else if ("showSplashAd".equals(method)) {
@@ -154,10 +154,9 @@ public class PluginDelegate implements MethodChannel.MethodCallHandler, EventCha
     /**
      * 请求权限
      *
-     * @param call   MethodCall
      * @param result Result
      */
-    public void requestPermissionIfNecessary(MethodCall call, MethodChannel.Result result) {
+    public void requestPermissionIfNecessary(MethodChannel.Result result) {
         TTAdSdk.getAdManager().requestPermissionIfNecessary(activity);
         result.success(true);
     }
@@ -170,41 +169,32 @@ public class PluginDelegate implements MethodChannel.MethodCallHandler, EventCha
      */
     public void initAd(MethodCall call, final MethodChannel.Result result) {
         String appId = call.argument("appId");
-        boolean useTextureView = call.argument("useTextureView");
-        boolean supportMultiProcess = call.argument("supportMultiProcess");
-        boolean allowShowNotify = call.argument("allowShowNotify");
-        ArrayList directDownloadNetworkType = call.argument("directDownloadNetworkType");
+        Boolean useTextureView = call.argument("useTextureView");
+        Boolean supportMultiProcess = call.argument("supportMultiProcess");
+        Boolean allowShowNotify = call.argument("allowShowNotify");
+        ArrayList<String> directDownloadNetworkType = call.argument("directDownloadNetworkType");
         int[] directDownloadNetworkTypeList = DataUtils.convertIntegers(directDownloadNetworkType);
         // 构建配置
         TTAdConfig config = new TTAdConfig.Builder()
                 .appId(appId)
-                .useTextureView(useTextureView) //使用TextureView控件播放视频,默认为SurfaceView,当有SurfaceView冲突的场景，可以使用TextureView
-                .allowShowNotify(allowShowNotify) //是否允许sdk展示通知栏提示
+                .useTextureView(Boolean.TRUE.equals(useTextureView)) //使用TextureView控件播放视频,默认为SurfaceView,当有SurfaceView冲突的场景，可以使用TextureView
+                .allowShowNotify(Boolean.TRUE.equals(allowShowNotify)) //是否允许sdk展示通知栏提示
                 .debug(BuildConfig.DEBUG) //测试阶段打开，可以通过日志排查问题，上线时去除该调用
-                .supportMultiProcess(supportMultiProcess)//是否支持多进程
+                .supportMultiProcess(Boolean.TRUE.equals(supportMultiProcess))//是否支持多进程
                 .directDownloadNetworkType(directDownloadNetworkTypeList)// 直接下载的网络方式
                 .build();
         // 初始化 SDK
-        TTAdSdk.init(activity.getApplicationContext(), config, new TTAdSdk.InitCallback() {
+        TTAdSdk.init(activity.getApplicationContext(), config);
+        TTAdSdk.start(new TTAdSdk.Callback() {
             @Override
             public void success() {
-                activity.runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        result.success(true);
-                    }
-                });
+                activity.runOnUiThread(() -> result.success(true));
             }
 
             @Override
             public void fail(int code, String msg) {
                 Log.e(TAG, "fail:  code = " + code + " msg = " + msg);
-                activity.runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        result.success(false);
-                    }
-                });
+                activity.runOnUiThread(() -> result.success(false));
 
             }
         });
@@ -219,7 +209,7 @@ public class PluginDelegate implements MethodChannel.MethodCallHandler, EventCha
     public void showSplashAd(MethodCall call, MethodChannel.Result result) {
         String posId = call.argument(KEY_POSID);
         String logo = call.argument(KEY_LOGO);
-        double timeout = call.argument(KEY_TIMEOUT);
+        Double timeout = call.argument(KEY_TIMEOUT);
         Intent intent = new Intent(activity, AdSplashActivity.class);
         intent.putExtra(KEY_POSID, posId);
         intent.putExtra(KEY_LOGO, logo);

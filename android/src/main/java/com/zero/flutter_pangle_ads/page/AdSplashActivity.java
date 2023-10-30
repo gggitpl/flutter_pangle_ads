@@ -93,11 +93,11 @@ public class AdSplashActivity extends AppCompatActivity implements TTAdNative.CS
                 .setCodeId(posId)
                 .setSupportDeepLink(true)
                 .setImageAcceptedSize(width, height) // 单位是px
-                .setExpressViewAcceptedSize(widthDp, UIUtils.px2dip(this,height)) // 单位是dp
+                .setExpressViewAcceptedSize(widthDp, UIUtils.px2dip(this, height)) // 单位是dp
                 .setAdLoadType(TTAdLoadType.LOAD)
                 .build();
         // 加载广告
-        splashAD.loadSplashAd(adSlot,this,absTimeout);
+        splashAD.loadSplashAd(adSlot, this, absTimeout);
     }
 
     /**
@@ -131,7 +131,7 @@ public class AdSplashActivity extends AppCompatActivity implements TTAdNative.CS
     }
 
     @Override
-    public void onSplashLoadSuccess() {
+    public void onSplashLoadSuccess(CSJSplashAd csjSplashAd) {
         Log.d(TAG, "onSplashLoadSuccess");
         // 加载事件
         AdEventHandler.getInstance().sendEvent(new AdEvent(this.posId, AdEventAction.onAdLoaded));
